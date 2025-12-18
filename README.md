@@ -1,6 +1,13 @@
 # n8n-youtube-news-playlist-updation
 An automated n8n workflow that monitors a YouTube playlist and automatically replaces expired live stream recordings with the latest active broadcasts via the YouTube Data API v3
 
+I maintain a playlist on youtube that contains live streams of news channels. This playlist is then shared to the multiple screens in my household, however, I noticed that these live streams expire after a certain period of time and thus I had to manually remove the expired streams and add the latest live streams. 
+Using n8n I have now automated the whole process!
+
+https://github.com/user-attachments/assets/568d6719-2da3-429a-a157-c949caf77a51
+
+
+
 🚀 Quick Start
 Follow these steps to get the News Playlist Updation workflow running in your own n8n instance:
 
