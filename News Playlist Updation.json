@@ -1,0 +1,279 @@
+{
+  "name": "News Playlist Updation",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "playlistItem",
+        "playlistId": "PLssoKYx3vwImV_IkRTsp-PTOJBNUGzeap",
+        "videoId": "={{ $json.items[0].id.videoId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -160
+      ],
+      "id": "7fec827c-5036-4e64-9baa-ef7adb00074a",
+      "name": "Add new live streams to playlist",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "JpoqgBMeuY4MreV3",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1600,
+        -48
+      ],
+      "id": "79d4bd79-baa8-4a1b-875b-a153fb1326a0",
+      "name": "Hourly Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "playlistItem",
+        "operation": "getAll",
+        "playlistId": "PLssoKYx3vwImV_IkRTsp-PTOJBNUGzeap",
+        "part": [
+          "*",
+          "snippet",
+          "contentDetails"
+        ],
+        "limit": 34,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        -48
+      ],
+      "id": "76e9e3a1-9112-43e7-b2b5-b511648ff473",
+      "name": "Get All Channels",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "JpoqgBMeuY4MreV3",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "get",
+        "videoId": "={{ $json.snippet.resourceId.videoId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        -1184,
+        -48
+      ],
+      "id": "be06310e-ea30-4216-ac6a-b361c0371480",
+      "name": "Extract Videos from Playlist",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "JpoqgBMeuY4MreV3",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "123e135d-2373-4c58-9c4d-afc8e7d586b6",
+              "leftValue": "={{ $json.snippet.liveBroadcastContent }}",
+              "rightValue": "none",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -976,
+        -48
+      ],
+      "id": "20fd0be4-122a-4cd7-9ad3-4ed37d8eb7da",
+      "name": "If Not Live"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "be1b5753-af7c-4cb3-8713-4f689ff7cad7",
+              "name": "channelName",
+              "value": "={{ $('Extract Videos from Playlist').item.json.snippet.channelId }}",
+              "type": "string"
+            },
+            {
+              "id": "2acbf34d-f76b-479a-9572-832d85567eaa",
+              "name": "oldvideoPlaylistID",
+              "value": "={{ $('Get All Channels').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -704,
+        -64
+      ],
+      "id": "9888b3d9-3987-448c-af72-770c821e6a61",
+      "name": "Metadata Extraction"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/youtube/v3/search?part=id,snippet&channelId={{ $json.channelName }}&eventType=live&type=video&order=date&maxResults=1&key={YOUR_API_KEY_HERE}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -480,
+        -160
+      ],
+      "id": "ff481b29-4f79-4d9d-a1c4-aca9af3f6473",
+      "name": "Updated Live Stream HTTP Request"
+    },
+    {
+      "parameters": {
+        "resource": "playlistItem",
+        "operation": "delete",
+        "playlistItemId": "={{ $json.oldvideoPlaylistID }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        192
+      ],
+      "id": "83f13070-cadf-408d-86f7-4a81bb2fd99a",
+      "name": "Delete Expired Live Streams",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "JpoqgBMeuY4MreV3",
+          "name": "YouTube account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Hourly Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get All Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Channels": {
+      "main": [
+        [
+          {
+            "node": "Extract Videos from Playlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Videos from Playlist": {
+      "main": [
+        [
+          {
+            "node": "If Not Live",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Not Live": {
+      "main": [
+        [
+          {
+            "node": "Metadata Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Metadata Extraction": {
+      "main": [
+        [
+          {
+            "node": "Updated Live Stream HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Delete Expired Live Streams",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Updated Live Stream HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Add new live streams to playlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b30b0cfc-762c-46de-b271-be63fb3eee88",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0ea7f3c76d895d3f9b6ad4549ef1559bee1c58bb0f19f7f0047afddb497269da"
+  },
+  "id": "XBgRn3mQqGbpNdyL",
+  "tags": []
+}
